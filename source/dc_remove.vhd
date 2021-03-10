@@ -2,6 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+
 entity dc_remove is
   generic(
     dig_size : integer := 16
@@ -33,7 +34,7 @@ architecture dc_remove_arch of dc_remove is
             y_i := x_i + buf;
             mult_res := shift_left(signed(alpha)*y_i, 1);
             buf := mult_res(2*dig_size - 1 downto dig_size) - x_i;
-            
+
             filter_out <= std_logic_vector(y_i);
         end if;
     end process;
