@@ -56,7 +56,7 @@ end procedure;
     constant QUANT_SIZE : integer := 12;
     constant F_s        : integer := 44100;
     constant AMP_QUANT  : integer := 2;
-    constant OFFSET     : integer := 2**(DIG_SIZE-1) / 2;
+    constant OFFSET     : integer := 2**(DIG_SIZE-1) / 4;
     
     signal clk          : std_logic := '0';
     signal Rs           : std_logic := '1';
