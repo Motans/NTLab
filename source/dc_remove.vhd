@@ -27,11 +27,13 @@ architecture dc_remove_arch of dc_remove is
         if (Rs = '1') then
             buf := to_signed(0, dig_size);
             x_i := to_signed(0, dig_size);
-        elsif (clk'event and clk = '1') then
+        elsif (rising_edge(clk)) then
             x_i := signed(filter_in);
             y_i := x_i + buf;
             mult_res := shift_left(signed(alpha)*y_i, 1);
-          
+
+            report integer'image(to_integer(signed(y_i)));
+
             buf := mult_res(2*dig_size - 1 downto dig_size) - x_i;
             filter_out <= std_logic_vector(y_i);
         end if;
