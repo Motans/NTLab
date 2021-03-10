@@ -38,4 +38,4 @@ architecture dc_remove_arch of dc_remove is
             filter_out <= std_logic_vector(y_i(2*dig_size - 1 downto dig_size));
         end if;
     end process;
-end dc_remove_arch;
+end dc_remove_arch;---m---dffb
