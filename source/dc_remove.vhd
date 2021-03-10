@@ -27,7 +27,7 @@ architecture dc_remove_arch of dc_remove is
       begin
         if (Rs = '1') then
             buf := to_signed(0, 2*dig_size);
-            x_i := to_signed(0, 2*dig_size);
+            x_i := to_signed(0, 2*dig_size); --omg
         elsif (rising_edge(clk)) then
             x_i := shift_left(resize(signed(filter_in), 2*dig_size), dig_size);
 
