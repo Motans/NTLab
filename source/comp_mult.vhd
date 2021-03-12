@@ -32,17 +32,19 @@ component real_mult is
     );
 end component;
 
-    signal op1      : std_logic_vector(word_len-1 downto 0);        --
-    signal op2      : std_logic_vector(word_len-1 downto 0);        -- Real multipliers
-    signal prod     : std_logic_vector(word_len-1 downto 0);        --
-
-    signal state    : integer range 0 to 3;                         -- Multipliers state
+    signal op1          : std_logic_vector(word_len-1 downto 0);        --
+    signal op2          : std_logic_vector(word_len-1 downto 0);        -- Real multipliers
+    signal prod         : std_logic_vector(word_len-1 downto 0);        --
+    
+    signal clk_intern   : std_logic;
+    signal state        : integer range 0 to 3;                         -- Multipliers state
     
   begin
+    clk_intern <= clk;
     mult0 : real_mult
         generic map(word_len)
-        port map(clk, op1, op2, prod);
-        
+        port map(clk_intern, op1, op2, prod);
+
     process(clk, strobe)
         variable ac : std_logic_vector(word_len-1 downto 0);        -- Res of imag and real
         variable bd : std_logic_vector(word_len-1 downto 0);        -- part of complex digit
@@ -51,9 +53,8 @@ end component;
         if (strobe'event and strobe = '1') then
             state <= 0;
         end if;
-
+        
         if (clk'event and clk = '1') then
-            report "rising edge in comp";
             case state is 
                 when 0 =>
                     op1   <= a;
