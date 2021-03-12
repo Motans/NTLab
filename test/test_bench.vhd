@@ -21,44 +21,46 @@ procedure clk_event(signal clk: out std_logic; constant FREQ: real; constant N: 
     end loop;
 end procedure;
 
-    constant DIG_SIZE   : integer := 16;
-    constant ACC_SIZE   : integer := 16;
-    constant QUANT_SIZE : integer := 12;
-    constant F_s        : integer := 44100;
-    constant AMP_QUANT  : integer := 2;
-    constant OFFSET     : integer := 2**(DIG_SIZE-1) / 4;
+component comp_mult is
+    generic(
+      word_len        :           natural
+    );
+    port(
+      clk             :   in      std_logic;
+      strobe          :   in      std_logic;
+      a               :   in      std_logic_vector(word_len-1 downto 0);
+      b               :   in      std_logic_vector(word_len-1 downto 0);
+      c               :   in      std_logic_vector(word_len-1 downto 0);
+      d               :   in      std_logic_vector(word_len-1 downto 0);
+      out_re          :   out     std_logic_vector(word_len-1 downto 0);
+      out_im          :   out     std_logic_vector(word_len-1 downto 0)
+    );
+end component;
+
+    constant WORD_LEN   : integer := 18;
     
-    signal clk          : std_logic := '0';
-    signal Rs           : std_logic := '1';
-    signal phase_inc         : std_logic_vector(DIG_SIZE-1 downto 0) := 
-        std_logic_vector(to_unsigned(512, DIG_SIZE));
-    signal sin_x        : std_logic_vector(DIG_SIZE-1 downto 0) := 
-        std_logic_vector(to_signed(0, DIG_SIZE));
-    signal alpha        : std_logic_vector(DIG_SIZE-1 downto 0) := 
-        std_logic_vector(to_signed(32505, DIG_SIZE));
-    signal filter_out   : std_logic_vector(DIG_SIZE-1 downto 0);
+    signal clk      :   std_logic;
+    signal strobe   :   std_logic;
+    signal a        :   std_logic_vector(WORD_LEN-1 downto 0);
+    signal b        :   std_logic_vector(WORD_LEN-1 downto 0);
+    signal c        :   std_logic_vector(WORD_LEN-1 downto 0);
+    signal d        :   std_logic_vector(WORD_LEN-1 downto 0);
+
+    signal res_re   :   std_logic_vector(WORD_LEN-1 downto 0);
+    signal res_im   :   std_logic_vector(WORD_LEN-1 downto 0);
+
   begin
-    clk_event(clk, 100.0, 1024);
-    Rs <= '0' after 10 ms;
-    
-    sin_t0 : sin_t
-        generic map(
-            DIG_SIZE,
-            ACC_SIZE,
-            QUANT_SIZE,
-            F_s,
-            AMP_QUANT,
-            OFFSET
-        )
-        port map(
-            clk,
-            Rs,
-            phase_inc,
-            sin_x
-        );
-
-    filter: dc_remove
-        generic map(DIG_SIZE)
-        port map(clk, Rs, sin_x, alpha, filter_out);
-
+    clk_event(clk, 100.0, 5);
+    strobe <= '1', '0' after 10 ms;
+    a <= std_logic_vector(
+        to_signed(26214, WORD_LEN));
+    b <= std_logic_vector(
+        to_signed(78643, WORD_LEN));
+    c <= std_logic_vector(
+        to_signed(52429, WORD_LEN));
+    d <= std_logic_vector(
+        to_signed(26214, WORD_LEN));
+    comp_mult0: comp_mult
+        generic map(WORD_LEN)
+        port map(clk, strobe, a, b, c, d, res_re, res_im);
 end test_bench_arch;

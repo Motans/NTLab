@@ -17,12 +17,16 @@ end real_mult;
 
 
 architecture real_mult_arch of real_mult is
-    signal mult_res :   signed(2*word_len - 1 downto 0);
   begin
     process(clk)
-        mult_res <= signed(word_in1) * signed(word_in2);
-        word_out <= mult_res(2*word_len - 1 downto word_len);
+        variable mult_res : signed(2*word_len - 1 downto 0);
+      begin
+        if(clk'event and clk = '1') then
+            report "rising edge in real";
+            mult_res := signed(word_in1) * signed(word_in2);
+
+            word_out <= std_logic_vector(
+                mult_res(2*word_len - 1 downto word_len));
+        end if;
     end process;
 end real_mult_arch;
-
-

@@ -9,10 +9,11 @@ entity comp_mult is
   );
   port(
     clk             :   in      std_logic;
-    reset           :   in      std_logic;
-    dstrb           :   in      std_logic;
-    in_re           :   in      std_logic_vector(word_len-1 downto 0);
-    in_im           :   in      std_logic_vector(word_len-1 downto 0);
+    strobe          :   in      std_logic;
+    a               :   in      std_logic_vector(word_len-1 downto 0);
+    b               :   in      std_logic_vector(word_len-1 downto 0);
+    c               :   in      std_logic_vector(word_len-1 downto 0);
+    d               :   in      std_logic_vector(word_len-1 downto 0);
     out_re          :   out     std_logic_vector(word_len-1 downto 0);
     out_im          :   out     std_logic_vector(word_len-1 downto 0)
   );
@@ -31,7 +32,53 @@ component real_mult is
     );
 end component;
 
-  begin
+    signal op1      : std_logic_vector(word_len-1 downto 0);        --
+    signal op2      : std_logic_vector(word_len-1 downto 0);        -- Real multipliers
+    signal prod     : std_logic_vector(word_len-1 downto 0);        --
 
+    signal state    : integer range 0 to 3;                         -- Multipliers state
     
+  begin
+    mult0 : real_mult
+        generic map(word_len)
+        port map(clk, op1, op2, prod);
+        
+    process(clk, strobe)
+        variable ac : std_logic_vector(word_len-1 downto 0);        -- Res of imag and real
+        variable bd : std_logic_vector(word_len-1 downto 0);        -- part of complex digit
+        variable bc : std_logic_vector(word_len-1 downto 0);        --
+      begin
+        if (strobe'event and strobe = '1') then
+            state <= 0;
+        end if;
+
+        if (clk'event and clk = '1') then
+            report "rising edge in comp";
+            case state is 
+                when 0 =>
+                    op1   <= a;
+                    op2   <= c;
+                    ac    := prod;
+                    state <= state + 1;
+                when 1 =>
+                    op1   <= b;
+                    op2   <= d;
+                    bd    := prod;
+                    state <= state + 1;
+                when 2 =>
+                    op1   <= b;
+                    op2   <= c;
+                    bc    := prod;
+                    state <= state + 1;
+                when 3 =>
+                    op1 <= a;
+                    op2 <= d;
+                    
+                    out_re <= std_logic_vector(
+                        signed(ac) - signed(bd));
+                    out_im <= std_logic_vector(
+                        signed(bc) - signed(prod));
+            end case;
+        end if;
+    end process;
 end comp_mult_arch;
