@@ -7,36 +7,6 @@ end test_bench;
 
 
 architecture test_bench_arch of test_bench is
-component sin_t is
-    generic(
-      dig_size    : natural;
-      acc_size    : natural;
-      quant_size  : natural;
-      F_s         : natural;
-      amp_quant   : integer;
-      offset      : integer
-    );
-    port(
-      clk       : in std_logic;
-      Rs        : in std_logic;
-      phase_inc : in std_logic_vector(acc_size-1 downto 0);
-      sin_out   : out std_logic_vector(dig_size-1 downto 0)
-    );
-end component;
-
-component dc_remove is
-  generic(
-    dig_size : integer
-  );
-  port(
-    clk         : in std_logic;
-    Rs          : in std_logic;
-    filter_in   : in std_logic_vector(dig_size-1 downto 0);
-    alpha       : in std_logic_vector(dig_size-1 downto 0);
-    filter_out  : out std_logic_vector(dig_size-1 downto 0)
-  );
-end component;
-
 procedure clk_event(signal clk: out std_logic; constant FREQ: real; constant N: natural) is
     constant PERIOD    : time := 1 sec / FREQ;        -- Full period
     constant HIGH_TIME : time := PERIOD / 2;          -- High time
