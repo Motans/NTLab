@@ -5,13 +5,13 @@ use ieee.numeric_std.all;
 
 entity real_mult is
   generic(
-    word_len        :           natural := 18
+    word_len    :           natural := 18
   );
   port(
-    clk             :   in      std_logic;
-    word_in1        :   in      std_logic_vector(word_len-1 downto 0);
-    word_in2        :   in      std_logic_vector(word_len-1 downto 0);
-    word_out        :   out     std_logic_vector(word_len-1 downto 0)
+    clk         :   in      std_logic;
+    word_in1    :   in      std_logic_vector(word_len-1 downto 0);
+    word_in2    :   in      std_logic_vector(word_len-1 downto 0);
+    word_out    :   out     std_logic_vector(word_len-1 downto 0)
   );
 end real_mult;
 

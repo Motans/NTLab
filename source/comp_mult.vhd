@@ -37,7 +37,6 @@ end component;
     signal prod         : std_logic_vector(word_len-1 downto 0);        --
     
     signal clk_intern   : std_logic;
-    signal state        : integer range 0 to 3;                         -- Multipliers state
     
   begin
     clk_intern <= clk;
@@ -46,12 +45,13 @@ end component;
         port map(clk_intern, op1, op2, prod);
 
     process(clk, strobe)
-        variable ac : std_logic_vector(word_len-1 downto 0);        -- Res of imag and real
-        variable bd : std_logic_vector(word_len-1 downto 0);        -- part of complex digit
-        variable bc : std_logic_vector(word_len-1 downto 0);        --
+        variable state  : integer range 0 to 3;                         -- Multipliers state
+        variable ac     : std_logic_vector(word_len-1 downto 0);        -- Res of imag and real
+        variable bd     : std_logic_vector(word_len-1 downto 0);        -- part of complex digit
+        variable bc     : std_logic_vector(word_len-1 downto 0);        --
       begin
         if (strobe'event and strobe = '1') then
-            state <= 0;
+            state := 0;
         end if;
         
         if (clk'event and clk = '1') then
@@ -60,17 +60,17 @@ end component;
                     op1   <= a;
                     op2   <= c;
                     ac    := prod;
-                    state <= state + 1;
+                    state := state + 1;
                 when 1 =>
                     op1   <= b;
                     op2   <= d;
                     bd    := prod;
-                    state <= state + 1;
+                    state := state + 1;
                 when 2 =>
                     op1   <= b;
                     op2   <= c;
                     bc    := prod;
-                    state <= state + 1;
+                    state := state + 1;
                 when 3 =>
                     op1 <= a;
                     op2 <= d;

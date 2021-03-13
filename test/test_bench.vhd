@@ -37,7 +37,21 @@ component comp_mult is
     );
 end component;
 
+component shiftr is
+    generic(
+      word_len    :           natural := 18;
+      prec_len    :           natural := 3
+    );
+    port( 
+      clk         :   in      std_logic;
+      prec        :   in      std_logic_vector(prec_len-1 downto 0);
+      word_in     :   in      std_logic_vector(word_len-1 downto 0);
+      word_out    :   out     std_logic_vector(word_len-1 downto 0)
+    );
+end component;
+
     constant WORD_LEN   : integer := 18;
+    constant PREC_LEN   : integer := 3;
     
     signal clk      :   std_logic;
     signal strobe   :   std_logic;
@@ -48,6 +62,10 @@ end component;
 
     signal res_re   :   std_logic_vector(WORD_LEN-1 downto 0);
     signal res_im   :   std_logic_vector(WORD_LEN-1 downto 0);
+
+    signal prec     :   std_logic_vector(PREC_LEN-1 downto 0);
+    signal word_in  :   std_logic_vector(WORD_LEN-1 downto 0);
+    signal word_out :   std_logic_vector(WORD_LEN-1 downto 0);
 
   begin
     clk_event(clk, 100.0, 5);
@@ -63,4 +81,18 @@ end component;
     comp_mult0: comp_mult
         generic map(WORD_LEN)
         port map(clk, strobe, a, b, c, d, res_re, res_im);
+
+
+    word_in <= "010000000000000000";
+    prec    <= "000", 
+               "001" after 10 ms,
+               "010" after 20 ms,
+               "011" after 30 ms,
+               "111" after 40 ms;
+
+    shiftr0: shiftr
+        generic map(WORD_LEN, PREC_LEN)
+        port map(clk, prec, word_in, word_out);
+    
+
 end test_bench_arch;
