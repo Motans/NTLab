@@ -91,6 +91,9 @@ end component;
         variable sum_buf_re :   std_logic_vector(word_len + resize_param - 1 downto 0);
         variable sum_buf_im :   std_logic_vector(word_len + resize_param - 1 downto 0);
 
+        variable sum_re     :   std_logic_vector(word_len + resize_param - 1 downto 0);
+        variable sum_im     :   std_logic_vector(word_len + resize_param - 1 downto 0);
+
         variable conv2_re   :   std_logic_vector(word_len-1 downto 0);
         variable conv2_im   :   std_logic_vector(word_len-1 downto 0);
 
@@ -136,7 +139,7 @@ end component;
                     conv1_re := prod_re & 
                                 std_logic_vector(to_unsigned(0, resize_param));
                     conv1_im := prod_im & 
-                                std_logic_vector(to_unsigned(0, resize_param));;
+                                std_logic_vector(to_unsigned(0, resize_param));
 
                     state := state + 1;
                 when 6 =>                                   -- Programmable right shift real part
@@ -152,7 +155,7 @@ end component;
                     sum_re := std_logic_vector(
                         signed(shift_re) + signed(sum_buf_re));
                     sum_im := std_logic_vector(
-                        signed(shift_im) + signed(shiftr_out));
+                        signed(shiftr_out) + signed(sum_buf_im));
 
                     sum_buf_re := sum_re;
                     sum_buf_im := sum_im;
