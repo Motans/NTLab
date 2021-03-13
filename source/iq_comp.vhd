@@ -109,11 +109,12 @@ end component;
             cm1_im      := std_logic_vector(to_signed(0, word_len));
             sum_buf_re  := std_logic_vector(to_signed(0, word_len + resize_param));
             sum_buf_im  := std_logic_vector(to_signed(0, word_len + resize_param)); 
-        elsif (dstrb = '1') then
-            state := 0;
-            din_re := din1_re;
-            din_im := din1_im;
         elsif (clk'event and clk = '1') then
+            if (dstrb = '1') then
+                state := 0;
+                din_re := din1_re;
+                din_im := din1_im;
+            end if;
             case state is
                 when 0 =>                                   -- Sub results of cm1 and din1
                     sub_re := std_logic_vector(
