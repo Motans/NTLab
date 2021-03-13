@@ -78,6 +78,9 @@ end component;
     process(clk, dstrb, reset)
         variable state      :   integer range 0 to 15;
 
+        variable din_re     :   std_logic_vector(word_len-1 downto 0);
+        variable din_im     :   std_logic_vector(word_len-1 downto 0);
+
         variable cm1_re     :   std_logic_vector(word_len-1 downto 0);
         variable cm1_im     :   std_logic_vector(word_len-1 downto 0);
 
@@ -108,13 +111,15 @@ end component;
             sum_buf_im  := std_logic_vector(to_signed(0, word_len + resize_param)); 
         elsif (dstrb = '1') then
             state := 0;
+            din_re := din1_re;
+            din_im := din1_im;
         elsif (clk'event and clk = '1') then
             case state is
                 when 0 =>                                   -- Sub results of cm1 and din1
                     sub_re := std_logic_vector(
-                        signed(din1_re) - signed(cm1_re));
+                        signed(din_re) - signed(cm1_re));
                     sub_im := std_logic_vector(
-                        signed(din1_im) - signed(cm1_im));
+                        signed(din_im) - signed(cm1_im));
 
                     dout_re <= sub_re;
                     dout_re <= sub_im;
@@ -163,9 +168,9 @@ end component;
 
                     state := state + 1;
                 when 10 =>                                  -- Conjunction comlex digit
-                    conj_re := din1_re;
+                    conj_re := din_re;
                     conj_im := std_logic_vector(
-                        -signed(din1_im));
+                        -signed(din_im));
 
                     state := state + 1;
                 when 11 =>                                  -- Start multiplication cm1
