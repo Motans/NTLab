@@ -100,19 +100,15 @@ end component;
         variable conj_re    :   std_logic_vector(word_len-1 downto 0);
         variable conj_im    :   std_logic_vector(word_len-1 downto 0);
       begin
-        if (reset'event and reset = '1') then
+        if (reset = '1') then
             state       := 0;
             cm1_re      := std_logic_vector(to_signed(0, word_len));
             cm1_im      := std_logic_vector(to_signed(0, word_len));
             sum_buf_re  := std_logic_vector(to_signed(0, word_len + resize_param));
             sum_buf_im  := std_logic_vector(to_signed(0, word_len + resize_param)); 
-        end if;
-
-        if (dstrb'event and dstrb = '1') then
+        elsif (dstrb = '1') then
             state := 0;
-        end if;
-
-        if (clk'event and clk = '1') then
+        elsif (clk'event and clk = '1') then
             case state is
                 when 0 =>                                   -- Sub results of cm1 and din1
                     sub_re := std_logic_vector(
