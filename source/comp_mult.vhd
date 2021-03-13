@@ -49,12 +49,12 @@ end component;
         variable ac     : std_logic_vector(word_len-1 downto 0);        -- Res of imag and real
         variable bd     : std_logic_vector(word_len-1 downto 0);        -- part of complex digit
         variable bc     : std_logic_vector(word_len-1 downto 0);        --
-      begin
-        if (strobe'event and strobe = '1') then
-            state := 0;
-        end if;
-        
+      begin    
         if (clk'event and clk = '1') then
+            if (strobe = '1') then
+                state := 0;
+            end if;
+
             case state is 
                 when 0 =>
                     op1   <= a;
