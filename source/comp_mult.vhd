@@ -21,31 +21,27 @@ end comp_mult;
 
 architecture comp_mult_arch of comp_mult is
 component real_mult is
-    generic(
-      word_len        :           natural := 18
-    );
-    port(
-      clk             :   in      std_logic;
-      word_in1        :   in      std_logic_vector(word_len-1 downto 0);
-      word_in2        :   in      std_logic_vector(word_len-1 downto 0);
-      word_out        :   out     std_logic_vector(word_len-1 downto 0)
-    );
+  generic(
+	  word_len        :           natural := 18
+  );
+  port(
+    word_in1        :   in      std_logic_vector(word_len-1 downto 0);
+    word_in2        :   in      std_logic_vector(word_len-1 downto 0);
+    word_out        :   out     std_logic_vector(word_len-1 downto 0)
+  );
 end component;
 
     signal op1          : std_logic_vector(word_len-1 downto 0);        --
     signal op2          : std_logic_vector(word_len-1 downto 0);        -- Real multipliers
     signal prod         : std_logic_vector(word_len-1 downto 0);        --
     
-    signal clk_intern   : std_logic;
-    
   begin
-    clk_intern <= clk;
     mult0 : real_mult
         generic map(word_len)
-        port map(clk_intern, op1, op2, prod);
+        port map(op1, op2, prod);
 
     process(clk, strobe)
-        variable state  : integer range 0 to 3;                         -- Multipliers state
+        variable state  : integer range 0 to 3;                         -- Multipliers states
         variable ac     : std_logic_vector(word_len-1 downto 0);        -- Res of imag and real
         variable bd     : std_logic_vector(word_len-1 downto 0);        -- part of complex digit
         variable bc     : std_logic_vector(word_len-1 downto 0);        --
@@ -55,7 +51,7 @@ end component;
                 state := 0;
             end if;
 
-            case state is 
+            case state is
                 when 0 =>
                     op1   <= a;
                     op2   <= c;
