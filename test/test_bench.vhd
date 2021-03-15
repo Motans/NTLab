@@ -21,33 +21,20 @@ procedure clk_event(signal clk: out std_logic; constant FREQ: real; constant N: 
     end loop;
 end procedure;
 
-component comp_mult is
-    generic(
-      word_len        :           natural
-    );
-    port(
-      clk             :   in      std_logic;
-      strobe          :   in      std_logic;
-      a               :   in      std_logic_vector(word_len-1 downto 0);
-      b               :   in      std_logic_vector(word_len-1 downto 0);
-      c               :   in      std_logic_vector(word_len-1 downto 0);
-      d               :   in      std_logic_vector(word_len-1 downto 0);
-      out_re          :   out     std_logic_vector(word_len-1 downto 0);
-      out_im          :   out     std_logic_vector(word_len-1 downto 0)
-    );
-end component;
-
-component shiftr is
-    generic(
-      word_len    :           natural := 18;
-      prec_len    :           natural := 3
-    );
-    port( 
-      clk         :   in      std_logic;
-      prec        :   in      std_logic_vector(prec_len-1 downto 0);
-      word_in     :   in      std_logic_vector(word_len-1 downto 0);
-      word_out    :   out     std_logic_vector(word_len-1 downto 0)
-    );
+component nco is
+  generic(
+    dig_size    :       natural;
+    acc_size    :       natural;
+    quant_size  :       natural;
+    F_s         :       natural;
+  );
+  port(
+    clk         :   in  std_logic;
+    reset       :   in  std_logic;
+    phase_inc   :   in  std_logic_vector(acc_size-1 downto 0);
+    sin_out     :   out std_logic_vector(dig_size-1 downto 0);
+    cos_out     :   out std_logic_vector(dig_size-1 downto 0)
+  );
 end component;
 
     constant WORD_LEN   : integer := 18;

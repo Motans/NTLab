@@ -5,16 +5,17 @@ use ieee.numeric_std.all;
 
 entity nco is
   generic(
-    dig_size    : natural := 16;
-    acc_size    : natural := 16;
-    quant_size  : natural := 12;
-    F_s         : natural := 44100
+    dig_size    :       natural := 16;
+    acc_size    :       natural := 16;
+    quant_size  :       natural := 12;
+    F_s         :       natural := 44100
   );
   port(
-    clk       : in std_logic;
-    Rs        : in std_logic;
-    phase_inc : in std_logic_vector(acc_size-1 downto 0);
-    sin_out   : out std_logic_vector(dig_size-1 downto 0)
+    clk         :   in  std_logic;
+    reset       :   in  std_logic;
+    phase_inc   :   in  std_logic_vector(acc_size-1 downto 0);
+    sin_out     :   out std_logic_vector(dig_size-1 downto 0);
+    cos_out     :   out std_logic_vector(dig_size-1 downto 0)
   );
 end nco;
 
@@ -107,41 +108,70 @@ architecture nco_arch of nco is
       32764,  32764,  32765,  32766,  32766,  32767,  32767,  32767,  32767,  32767
     );
   begin
-    sin_gen: process(clk, Rs)
-        variable acc    : unsigned(acc_size-1 downto 0) := to_unsigned(0, acc_size);
-        variable addr   : unsigned(quant_size-1 downto 0);
+    sin_gen: process(clk, reset)
+        variable acc        : unsigned(acc_size-1 downto 0) := to_unsigned(0, acc_size);
+
+        variable addr       : unsigned(quant_size-1 downto 0);
+        variable real_addr  : integer range 0 to 2*TABLE_SIZE - 1;
+        variable sin_addr   : integer range 0 to TABLE_SIZE;
+        variable cos_addr   : integer range 0 to TABLE_SIZE;
+
+        variable sin_sign   : std_logic;                                -- 0 is +
+        variable cos_sign   : std_logic;                                -- 1 is -
+
+        variable sin_val    : signed(dig_size-1 downto 0);
+        variable cos_val    : signed(dig_size-1 downto 0);
       begin 
-        if (Rs = '1') then
-            acc := to_unsigned(0, acc_size);
-            addr := to_unsigned(0, quant_size);
-            sin_out <= std_logic_vector(to_signed(0, dig_size));
-        elsif (rising_edge(clk)) then
+        if (clk'event and clk = '1') then
+            if (reset = '1') then
+                acc     := to_unsigned(0, acc_size);
+                addr    := to_unsigned(0, quant_size);
+                sin_out <= std_logic_vector(to_signed(0, dig_size));
+            end if;
+
             addr := acc(acc_size-1 downto acc_size - quant_size);       --quantization
             acc  := acc + unsigned(phase_inc);
 
-            if (to_integer(addr) < TABLE_SIZE) then
-                sin_out <= std_logic_vector(
-                    to_signed(LUT(to_integer(addr)), 
-                              dig_size));
-            elsif (to_integer(addr) = TABLE_SIZE) then
-                sin_out <= std_logic_vector(
-                    to_signed(2**(dig_size-1) - 1, dig_size));
-            elsif (to_integer(addr) > TABLE_SIZE and to_integer(addr) < 2*TABLE_SIZE) then
-                sin_out <= std_logic_vector(
-                    to_signed(LUT(2*TABLE_SIZE - to_integer(addr)), 
-                              dig_size));
-            elsif (to_integer(addr) >= 2*TABLE_SIZE and to_integer(addr) < 3*TABLE_SIZE) then
-                sin_out <= std_logic_vector(
-                    to_signed(-LUT(to_integer(addr) - 2*TABLE_SIZE), 
-                              dig_size));
-            elsif (to_integer(addr) = 3*TABLE_SIZE) then
-                sin_out <= std_logic_vector(
-                    to_signed(-(2**(dig_size-1) - 1), dig_size));
-            elsif (to_integer(addr) > 3*TABLE_SIZE) then
-                sin_out <= std_logic_vector(
-                    to_signed(-LUT(4*TABLE_SIZE - to_integer(addr)), 
-                              dig_size));
+            if (to_integer(addr) < 2*TABLE_SIZE) then
+                real_addr   := to_integer(addr);
+                sin_sign    := '0';
+            else
+                real_addr   := to_integer(addr) - 2*TABLE_SIZE;
+                sin_sign    := '1';
             end if;
+
+            if (real_addr < TABLE_SIZE+1) then
+                cos_sign := '0';
+            else
+                real_addr := 2*TABLE_SIZE - real_addr;
+                cos_sign := '1';
+            end if;
+            
+            sin_addr := real_addr;
+            cos_addr := TABLE_SIZE - real_addr;
+
+            if (sin_addr = TABLE_SIZE) then
+                sin_val := to_signed(2**(dig_size-1) - 1, dig_size);
+            else
+                sin_val := to_signed(LUT(sin_addr), dig_size);
+            end if;
+
+            if (cos_addr = TABLE_SIZE) then
+                cos_val := to_signed(2**(dig_size-1) - 1, dig_size);
+            else
+                cos_val := to_signed(LUT(cos_addr), dig_size);
+            end if;
+
+            if (sin_sign = '1') then
+                sin_val := -sin_val;
+            end if;
+
+            if ('1' = (sin_sign xor cos_sign)) then
+                cos_val := -cos_val;
+            end if;
+            
+            sin_out <= std_logic_vector(sin_val);
+            cos_out <= std_logic_vector(cos_val);
         end if;
     end process;
 end nco_arch;
