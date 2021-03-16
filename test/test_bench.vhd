@@ -82,7 +82,7 @@ end component;
     constant F_s            :   integer := 44100;
 
     constant FREQ           :   real    := 100.0;
-    constant N              :   natural := 16*(2**16);
+    constant N              :   natural := 16*(2**13);
     constant DURATION       :   time    := 0.5 sec / FREQ;
     
     signal clk              :   std_logic;
@@ -104,7 +104,7 @@ end component;
     phase_inc <= std_logic_vector(
         to_unsigned(512, ACC_SIZE));
     prec <= std_logic_vector(
-        to_signed(0, PREC_LEN));
+        to_unsigned(0, PREC_LEN));
 
     nco0: nco
         generic map( DIG_SIZE,
