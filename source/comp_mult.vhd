@@ -46,7 +46,7 @@ end component;
         generic map(word_len)
         port map(op1, op2, prod);
 
-    a1 : process(clk, strobe)
+    process(clk, strobe)
         variable state  : integer range 0 to 3;                         -- Multipliers states
 
         variable reg_a  : std_logic_vector(word_len-1 downto 0);
@@ -69,23 +69,25 @@ end component;
                 when 0 =>
                     op1   <= reg_a;
                     op2   <= reg_c;
-                    ac    <= prod;
+                    
                     state := state + 1;
                 when 1 =>
+                    ac    <= prod;
                     op1   <= reg_b;
                     op2   <= reg_d;
-                    bd    <= prod;
+                    
                     state := state + 1;
                 when 2 =>
+                    bd    <= prod;
                     op1   <= reg_b;
                     op2   <= reg_c;
-                    bc  <= prod;
+                    
                     state := state + 1;
                 when 3 =>
+                    bc  <= prod;
                     op1 <= reg_a;
                     op2 <= reg_d;
                     
-                    --report integer'image(to_integer(signed(ac)));
                     out_re <= std_logic_vector(
                         signed(ac) - signed(bd));
                     out_im <= std_logic_vector(
