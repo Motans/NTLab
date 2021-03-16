@@ -32,29 +32,29 @@ component real_mult is
 end component;
 
     signal op1          : std_logic_vector(word_len-1 downto 0);        --
-    signal op2          : std_logic_vector(word_len-1 downto 0);        -- Real multipliers
-    signal prod         : std_logic_vector(word_len-1 downto 0);        --
-
-    signal ac     : std_logic_vector(word_len-1 downto 0);        -- Res of imag and real
-    signal bd     : std_logic_vector(word_len-1 downto 0);        -- part of complex digit
-    signal bc     : std_logic_vector(word_len-1 downto 0);        --
-
-    
-    
+    signal op2          : std_logic_vector(word_len-1 downto 0);        -- Real multiplier
+    signal prod         : std_logic_vector(word_len-1 downto 0);        --    
   begin
     mult0 : real_mult
         generic map(word_len)
         port map(op1, op2, prod);
 
-    process(clk, strobe)
-        variable state  : integer range 0 to 3;                         -- Multipliers states
+    process(clk)
+        variable state  : integer range 0 to 5;                         -- Multipliers states
 
         variable reg_a  : std_logic_vector(word_len-1 downto 0);
         variable reg_b  : std_logic_vector(word_len-1 downto 0);
         variable reg_c  : std_logic_vector(word_len-1 downto 0);
         variable reg_d  : std_logic_vector(word_len-1 downto 0);
 
-        
+        variable res_re : std_logic_vector(word_len-1 downto 0);
+        variable res_im : std_logic_vector(word_len-1 downto 0);
+
+        variable ac     : std_logic_vector(word_len-1 downto 0);        -- Res of imag and real
+        variable bd     : std_logic_vector(word_len-1 downto 0);        -- part of complex digit
+        variable bc     : std_logic_vector(word_len-1 downto 0);        --
+        variable ad     : std_logic_vector(word_len-1 downto 0);        --
+
       begin    
         if (clk'event and clk = '1') then
             if (strobe = '1') then
@@ -69,29 +69,32 @@ end component;
                 when 0 =>
                     op1   <= reg_a;
                     op2   <= reg_c;
-                    
                     state := state + 1;
                 when 1 =>
-                    ac    <= prod;
-                    op1   <= reg_b;
+                    ac    := prod;
+                    op1   <= reg_a;
                     op2   <= reg_d;
-                    
                     state := state + 1;
                 when 2 =>
-                    bd    <= prod;
+                    ad    := prod;
                     op1   <= reg_b;
                     op2   <= reg_c;
-                    
                     state := state + 1;
                 when 3 =>
-                    bc  <= prod;
-                    op1 <= reg_a;
+                    bc  := prod;
+                    op1 <= reg_b;
                     op2 <= reg_d;
-                    
+                    state := state + 1;
+                when 4 =>
+                    bd := prod;
                     out_re <= std_logic_vector(
                         signed(ac) - signed(bd));
+                    
                     out_im <= std_logic_vector(
-                        signed(bc) - signed(prod));
+                        signed(bc) + signed(ad));
+                    
+                    state := state + 1;
+                when others =>
             end case;
         end if;
     end process;

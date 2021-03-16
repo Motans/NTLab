@@ -82,7 +82,7 @@ end component;
     constant F_s            :   integer := 44100;
 
     constant FREQ           :   real    := 100.0;
-    constant N              :   natural := 1024;
+    constant N              :   natural := 16*(2**16);
     constant DURATION       :   time    := 0.5 sec / FREQ;
     
     signal clk              :   std_logic;
@@ -93,6 +93,7 @@ end component;
     signal phase_inc        :   std_logic_vector(ACC_SIZE-1 downto 0);
     signal sin_x            :   std_logic_vector(DIG_SIZE-1 downto 0);
     signal cos_x            :   std_logic_vector(DIG_SIZE-1 downto 0);
+    signal cos_redux        :   std_logic_vector(DIG_SIZE-1 downto 0);
 
     signal dout_re          :   std_logic_vector(DIG_SIZE-1 downto 0);
     signal dout_im          :   std_logic_vector(DIG_SIZE-1 downto 0);
@@ -100,12 +101,11 @@ end component;
   begin
     clk_event(clk, FREQ, N);
     strobe_event(strobe, FREQ/16.0, DURATION, N / 16);
-    --reset <= '1', '0' after DURATION;
     phase_inc <= std_logic_vector(
         to_unsigned(512, ACC_SIZE));
     prec <= std_logic_vector(
         to_signed(0, PREC_LEN));
-        
+
     nco0: nco
         generic map( DIG_SIZE,
                      ACC_SIZE,

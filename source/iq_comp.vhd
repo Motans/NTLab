@@ -57,7 +57,8 @@ end component;
     signal c            :   std_logic_vector(word_len-1 downto 0);                      -- 
     signal d            :   std_logic_vector(word_len-1 downto 0);                      -- 
     signal prod_re      :   std_logic_vector(word_len-1 downto 0);                      -- 
-    signal prod_im      :   std_logic_vector(word_len-1 downto 0);                      -- 
+    signal prod_im      :   std_logic_vector(word_len-1 downto 0);                      --
+        
 
     signal shiftr_in    :   std_logic_vector(word_len + resize_param - 1 downto 0);     -- Shifter signals
     signal shiftr_out   :   std_logic_vector(word_len + resize_param - 1 downto 0);     --
@@ -75,7 +76,7 @@ end component;
         generic map(word_len + resize_param, prec_len)
         port map(clk_intern, prec, shiftr_in, shiftr_out);
     
-    process(clk, dstrb, reset)
+    process(clk, reset)
         variable state      :   integer range 0 to 15 := 0;
 
         variable din_re     :   std_logic_vector(word_len-1 downto 0);
@@ -112,13 +113,12 @@ end component;
             cm1_re      := std_logic_vector(to_signed(0, word_len));
             cm1_im      := std_logic_vector(to_signed(0, word_len));
             sum_buf_re  := std_logic_vector(to_signed(0, word_len + resize_param));
-            sum_buf_im  := std_logic_vector(to_signed(0, word_len + resize_param)); 
+            sum_buf_im  := std_logic_vector(to_signed(0, word_len + resize_param));
         elsif (clk'event and clk = '1') then
             if (dstrb = '1') then
                 state := 0;
                 din_re := din1_re;
                 din_im := din1_im;
-                
             end if;
             case state is
                 when 0 =>                                   -- Sub results of cm1 and din1
@@ -139,23 +139,19 @@ end component;
 
                     strobe_mult <= '1';
                     state := state + 1;
-                when 2 | 3 | 4 =>                           -- Multiplictaion in 4 cycles
+                when 2 | 3 | 4 | 5 =>                       -- Multiplictaion in 4 cycles
                     strobe_mult <= '0';
                     state := state + 1;
-                when 5 =>                                   -- Resize vector to + resize param, and data to high part
+                when 6 =>
                     conv1_re := prod_re & 
                                 std_logic_vector(to_unsigned(0, resize_param));
                     conv1_im := prod_im & 
                                 std_logic_vector(to_unsigned(0, resize_param));
-                    
-                    --report integer'image(to_integer(signed(prod_re)));
-                    state := state + 1;
-                when 6 =>                                   -- Programmable right shift real part
-                    shiftr_in <= conv1_re;
-                    shift_re := shiftr_out;
 
+                    shiftr_in <= conv1_re;
                     state := state + 1;
                 when 7 =>                                   -- Programmable right shift imag part
+                    shift_re := shiftr_out;
                     shiftr_in <= conv1_im;
 
                     state := state + 1;
@@ -169,26 +165,24 @@ end component;
                     sum_buf_im := sum_im;
                     
                     state := state + 1;
-                when 9 =>                                  -- Convert result of sum
+                when 9 =>                                  -- Convert result of sum and conj
                     conv2_re := sum_re(word_len + resize_param - 1 downto resize_param);
                     conv2_im := sum_im(word_len + resize_param - 1 downto resize_param);
 
-                    state := state + 1;
-                when 10 =>                                  -- Conjunction comlex digit
                     conj_re := din_re;
                     conj_im := std_logic_vector(
                         -signed(din_im));
 
                     state := state + 1;
-                when 11 =>                                  -- Start multiplication cm1
+                when 10 =>                                  -- Start multiplication cm1
                     a <= conj_re;
                     b <= conj_im;
                     c <= conv2_re;
                     d <= conv2_im;
 
-                    strobe_mult <= clk_intern;
+                    strobe_mult <= '1';
                     state := state + 1;
-                when 12 | 13 | 14 =>                        -- Multiplication cm1
+                when 11 | 12 | 13 | 14 =>                        -- Multiplication cm1
                     strobe_mult <= '0';
                     state := state + 1;
                 when 15 =>
