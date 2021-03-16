@@ -22,7 +22,7 @@ end comp_mult;
 architecture comp_mult_arch of comp_mult is
 component real_mult is
   generic(
-	  word_len        :           natural := 18
+    word_len        :           natural := 18
   );
   port(
     word_in1        :   in      std_logic_vector(word_len-1 downto 0);
@@ -34,43 +34,58 @@ end component;
     signal op1          : std_logic_vector(word_len-1 downto 0);        --
     signal op2          : std_logic_vector(word_len-1 downto 0);        -- Real multipliers
     signal prod         : std_logic_vector(word_len-1 downto 0);        --
+
+    signal ac     : std_logic_vector(word_len-1 downto 0);        -- Res of imag and real
+    signal bd     : std_logic_vector(word_len-1 downto 0);        -- part of complex digit
+    signal bc     : std_logic_vector(word_len-1 downto 0);        --
+
+    
     
   begin
     mult0 : real_mult
         generic map(word_len)
         port map(op1, op2, prod);
 
-    process(clk, strobe)
+    a1 : process(clk, strobe)
         variable state  : integer range 0 to 3;                         -- Multipliers states
-        variable ac     : std_logic_vector(word_len-1 downto 0);        -- Res of imag and real
-        variable bd     : std_logic_vector(word_len-1 downto 0);        -- part of complex digit
-        variable bc     : std_logic_vector(word_len-1 downto 0);        --
+
+        variable reg_a  : std_logic_vector(word_len-1 downto 0);
+        variable reg_b  : std_logic_vector(word_len-1 downto 0);
+        variable reg_c  : std_logic_vector(word_len-1 downto 0);
+        variable reg_d  : std_logic_vector(word_len-1 downto 0);
+
+        
       begin    
         if (clk'event and clk = '1') then
             if (strobe = '1') then
                 state := 0;
+                reg_a := a;
+                reg_b := b;
+                reg_c := c;
+                reg_d := d;
             end if;
-
+            
             case state is
                 when 0 =>
-                    op1   <= a;
-                    op2   <= c;
-                    ac    := prod;
+                    op1   <= reg_a;
+                    op2   <= reg_c;
+                    ac    <= prod;
                     state := state + 1;
                 when 1 =>
-                    op1   <= b;
-                    op2   <= d;
-                    bd    := prod;
+                    op1   <= reg_b;
+                    op2   <= reg_d;
+                    bd    <= prod;
                     state := state + 1;
                 when 2 =>
-                    op1   <= b;
-                    op2   <= c;
-                    bc    := prod;
+                    op1   <= reg_b;
+                    op2   <= reg_c;
+                    bc  <= prod;
                     state := state + 1;
                 when 3 =>
-                    op1 <= a;
-                    op2 <= d;
+                    op1 <= reg_a;
+                    op2 <= reg_d;
                     
+                    --report integer'image(to_integer(signed(ac)));
                     out_re <= std_logic_vector(
                         signed(ac) - signed(bd));
                     out_im <= std_logic_vector(

@@ -16,10 +16,10 @@ end real_mult;
 
 
 architecture real_mult_arch of real_mult is
-	signal mult_res : signed(2*word_len - 1 downto 0);
+    signal mult_res : signed(2*word_len - 1 downto 0);
   begin
-	mult_res <= signed(word_in1) * signed(word_in2);
+    mult_res <= signed(word_in1) * signed(word_in2);
 
-	word_out <= std_logic_vector(
-		mult_res(2*word_len - 1 downto word_len));
+    word_out <= std_logic_vector(
+        mult_res(2*word_len - 1 downto word_len));
 end real_mult_arch;
