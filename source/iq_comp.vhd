@@ -76,7 +76,7 @@ end component;
         generic map(word_len + resize_param, prec_len)
         port map(clk_intern, prec, shiftr_in, shiftr_out);
     
-    process(clk, reset)
+    iq0 : process(clk, reset)
         variable state      :   integer range 0 to 15 := 0;
 
         variable din_re     :   std_logic_vector(word_len-1 downto 0);
