@@ -25,26 +25,14 @@ function [dout, cm1, buf] = iq_comp(din, cm1, buf, i)
     
   conv2 = fix(sum1 / 2^16);
   conj1 = conj(din);
+  
   a = real(conv2);
   b = imag(conv2);
   c = real(conj1);
   d = imag(conj1);
-##  CM1 = FIX(A*C / 2^18) - FIX(B*D / 2^18) +\
-##     J*(FIX(A*D / 2^18) + FIX(B*C / 2^18));
+  
   cm1 = bitshift(a*c, -18) - bitshift(b*d, -18) +\
      j*(bitshift(a*d, -18) + bitshift(b*c, -18));
-##cm1 = fix(conj1*conv2 / 2^18);
-  if(i < 32)
-    din
-    dout
-    cm2
-    conv1
-    sum1
-    buf
-    conv2
-    conj1
-    cm1
-  endif
 endfunction
 
 cm1 = 0;
@@ -71,9 +59,13 @@ for i = 0:(2^14-1)
 endfor
 
 x_fft = fft(x);
-y_fft = fft(y);
-xx_fft = fft(xx);
+x_ffts = fftshift(x_fft);
+y_fft = fftshift(y);
+y_ffts = fftshift(y_fft);
+xx_fft = fftshift(xx);
+xx_ffts = fftshift(xx_fft);
 yy_fft = fft(yy);
+yy_ffts = fftshift(yy_fft);
 
 figure;
   subplot(321);
@@ -98,9 +90,6 @@ figure;
 
   subplot(3,2,[5,6]);
   hold on;
-  plot(abs(y_fft));
-  plot(abs(yy_fft));
-
-figure;
-
-plot(abs(y - yy) / 2^17);
+  plot(20*log10(abs(x_ffts)));
+  plot(20*log10(abs(yy_ffts)));
+  
