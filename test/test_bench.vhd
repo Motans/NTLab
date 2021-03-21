@@ -1,6 +1,8 @@
 library ieee;
+use std.textio.all;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
+--use ieee.std_logic_textio.all;
 
 entity test_bench is
 end test_bench;
@@ -71,40 +73,50 @@ component iq_comp is
     dout_im         :   out     std_logic_vector(word_len-1 downto 0)           -- sfix18_En17
   );
 end component;
-    constant WORD_LEN       :   integer := 18;
-    constant PREC_LEN       :   integer := 3;
-    constant RESIZE_PARAM   :   integer := 3;
+
+    constant    outfilename0    :   string  := "./matlab/re_in.txt";
+    constant    outfilename1    :   string  := "./matlab/im_in.txt";
+    constant    outfilename2    :   string  := "./matlab/re_out.txt";
+    constant    outfilename3    :   string  := "./matlab/im_out.txt";
+
+    file        outfile0        :   TEXT    open write_mode is outfilename0;
+    file        outfile1        :   TEXT    open write_mode is outfilename1;
+    file        outfile2        :   TEXT    open write_mode is outfilename2;
+    file        outfile3        :   TEXT    open write_mode is outfilename3;
+
+    constant    WORD_LEN        :   integer := 18;
+    constant    PREC_LEN        :   integer := 3;
+    constant    RESIZE_PARAM    :   integer := 16;
+    constant    DIG_SIZE        :   integer := 18;
+    constant    ACC_SIZE        :   integer := 16;
+    constant    QUANT_SIZE      :   integer := 12;
+    constant    F_s             :   integer := 44100;
+
+    constant    FREQ            :   real    := 1000.0;
+    constant    N               :   natural := 2**14;
     
+    signal      clk             :   std_logic;
+    signal      strobe_cos      :   std_logic;
+    signal      clk_iq          :   std_logic;
+    signal      strobe          :   std_logic;
+    signal      reset           :   std_logic := '0';
 
-    constant DIG_SIZE       :   integer := 18;
-    constant ACC_SIZE       :   integer := 16;
-    constant QUANT_SIZE     :   integer := 12;
-    constant F_s            :   integer := 44100;
+    signal      prec            :   std_logic_vector(PREC_LEN-1 downto 0);
+    signal      phase_inc       :   std_logic_vector(ACC_SIZE-1 downto 0);
+    signal      sin_x           :   std_logic_vector(DIG_SIZE-1 downto 0);
+    signal      cos_x           :   std_logic_vector(DIG_SIZE-1 downto 0);
+    signal      cos_redux       :   std_logic_vector(DIG_SIZE-1 downto 0) := (others => '0');
+    signal      cos_redux_buf   :   std_logic_vector(DIG_SIZE-1 downto 0) := (others => '0');
 
-    constant FREQ           :   real    := 100.0;
-    constant N              :   natural := 16*(2**13);
-    constant DURATION       :   time    := 0.5 sec / FREQ;
-    
-    signal clk              :   std_logic;
-    signal clk_iq           :   std_logic;
-    signal strobe           :   std_logic;
-    signal reset            :   std_logic := '0';
-    signal prec             :   std_logic_vector(PREC_LEN-1 downto 0);
-    signal phase_inc        :   std_logic_vector(ACC_SIZE-1 downto 0);
-    signal sin_x            :   std_logic_vector(DIG_SIZE-1 downto 0);
-    signal cos_x            :   std_logic_vector(DIG_SIZE-1 downto 0);
-    signal cos_redux        :   std_logic_vector(DIG_SIZE-1 downto 0);
-
-    signal dout_re          :   std_logic_vector(DIG_SIZE-1 downto 0);
-    signal dout_im          :   std_logic_vector(DIG_SIZE-1 downto 0);
+    signal      dout_re         :   std_logic_vector(DIG_SIZE-1 downto 0);
+    signal      dout_im         :   std_logic_vector(DIG_SIZE-1 downto 0);
 
   begin
-    clk_event(clk, FREQ, N);
-    strobe_event(strobe, FREQ/16.0, DURATION, N / 16);
+    clk_event(clk, FREQ, 16*N);
+    strobe_event(strobe, FREQ/16.0, 0.5 sec / FREQ, N);
     phase_inc <= std_logic_vector(
         to_unsigned(512, ACC_SIZE));
-    prec <= std_logic_vector(
-        to_unsigned(0, PREC_LEN));
+    prec <= (others => '0');
 
     nco0: nco
         generic map( DIG_SIZE,
@@ -112,6 +124,18 @@ end component;
                      QUANT_SIZE,
                      F_s)
         port map(strobe, reset, phase_inc, sin_x, cos_x);
+
+    -- strobe_cos <= strobe;
+    -- redux_cos: process(strobe_cos)
+    --   begin
+    --     if(strobe_cos'event and strobe = '1') then
+    --         report "redux";
+    --         cos_redux <= cos_redux_buf;
+    --         cos_redux_buf <= std_logic_vector(
+    --             signed(cos_x) / to_signed(2, WORD_LEN));
+    --         clk_iq <= clk;
+    --     end if;
+    -- end process redux_cos;
     
     clk_iq <= clk;
     iq_comp0: iq_comp
@@ -120,4 +144,21 @@ end component;
                      RESIZE_PARAM)
         port map(clk_iq, reset, strobe, prec, cos_x, sin_x, dout_re, dout_im);
 
+    RC: process(strobe)
+        variable l : line;
+      begin
+        if(strobe'event and strobe = '0') then
+            write(l,to_integer(signed(cos_x)));
+            writeline(outfile0,l);
+
+            write(l,to_integer(signed(sin_x)));
+            writeline(outfile1,l);
+
+            write(l,to_integer(signed(dout_re)));
+            writeline(outfile2, l);
+
+            write(l,to_integer(signed(dout_im)));
+            writeline(outfile3,l);
+        end if;
+    end process RC;
 end test_bench_arch;

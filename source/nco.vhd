@@ -116,7 +116,7 @@ architecture nco_arch of nco is
     );
   begin
     sin_gen: process(clk, reset)
-        variable acc        : unsigned(acc_size-1 downto 0) := to_unsigned(0, acc_size);
+        variable acc        : unsigned(acc_size-1 downto 0) := (others => '0');
 
         variable addr       : unsigned(quant_size-1 downto 0);
         variable real_addr  : integer range 0 to 2*TABLE_SIZE - 1;
@@ -128,13 +128,13 @@ architecture nco_arch of nco is
 
         variable sin_val    : signed(dig_size-1 downto 0);
         variable cos_val    : signed(dig_size-1 downto 0);
+        variable cos_buf    : std_logic_vector(dig_size-1 downto 0) := (others => '0');
       begin 
-        if (clk'event and clk = '1') then
-            if (reset = '1') then
-                acc     := to_unsigned(0, acc_size);
-                addr    := to_unsigned(0, quant_size);
-                sin_out <= std_logic_vector(to_signed(0, dig_size));
-            end if;
+        if (reset = '1') then
+            acc     := (others => '0');
+            addr    := (others => '0');
+            sin_out <= (others => '0');
+        elsif (clk'event and clk = '1') then
 
             addr := acc(acc_size-1 downto acc_size - quant_size);       --quantization
             acc  := acc + unsigned(phase_inc);
@@ -178,7 +178,8 @@ architecture nco_arch of nco is
             end if;
             
             sin_out <= std_logic_vector(sin_val);
-            cos_out <= std_logic_vector(cos_val / to_signed(2, dig_size));
+            cos_out <= cos_buf;
+            cos_buf := std_logic_vector(cos_val / to_signed(2, dig_size));
         end if;
     end process;
 end nco_arch;

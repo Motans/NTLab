@@ -82,10 +82,8 @@ end component;
         variable din_re     :   std_logic_vector(word_len-1 downto 0);
         variable din_im     :   std_logic_vector(word_len-1 downto 0);
 
-        variable cm1_re     :   std_logic_vector(word_len-1 downto 0) := 
-            std_logic_vector(to_signed(0, word_len));
-        variable cm1_im     :   std_logic_vector(word_len-1 downto 0) := 
-            std_logic_vector(to_signed(0, word_len));
+        variable cm1_re     :   std_logic_vector(word_len-1 downto 0) := (others => '0');
+        variable cm1_im     :   std_logic_vector(word_len-1 downto 0) := (others => '0');
 
         variable sub_re     :   std_logic_vector(word_len-1 downto 0);
         variable sub_im     :   std_logic_vector(word_len-1 downto 0);
@@ -94,10 +92,8 @@ end component;
         variable conv1_im   :   std_logic_vector(word_len + resize_param - 1 downto 0);
 
         variable shift_re   :   std_logic_vector(word_len + resize_param - 1 downto 0);
-        variable sum_buf_re :   std_logic_vector(word_len + resize_param - 1 downto 0) :=
-            std_logic_vector(to_signed(0, word_len + resize_param));
-        variable sum_buf_im :   std_logic_vector(word_len + resize_param - 1 downto 0) :=
-            std_logic_vector(to_signed(0, word_len + resize_param));
+        variable sum_buf_re :   std_logic_vector(word_len + resize_param - 1 downto 0) := (others => '0');
+        variable sum_buf_im :   std_logic_vector(word_len + resize_param - 1 downto 0) := (others => '0');
 
         variable sum_re     :   std_logic_vector(word_len + resize_param - 1 downto 0);
         variable sum_im     :   std_logic_vector(word_len + resize_param - 1 downto 0);
@@ -110,16 +106,17 @@ end component;
       begin
         if (reset = '1') then
             state       := 0;
-            cm1_re      := std_logic_vector(to_signed(0, word_len));
-            cm1_im      := std_logic_vector(to_signed(0, word_len));
-            sum_buf_re  := std_logic_vector(to_signed(0, word_len + resize_param));
-            sum_buf_im  := std_logic_vector(to_signed(0, word_len + resize_param));
+            cm1_re      := (others => '0');
+            cm1_im      := (others => '0');
+            sum_buf_re  := (others => '0');
+            sum_buf_im  := (others => '0');
         elsif (clk'event and clk = '1') then
             if (dstrb = '1') then
                 state := 0;
                 din_re := din1_re;
                 din_im := din1_im;
             end if;
+
             case state is
                 when 0 =>                                   -- Sub results of cm1 and din1
                     sub_re := std_logic_vector(
@@ -147,7 +144,7 @@ end component;
                                 std_logic_vector(to_unsigned(0, resize_param));
                     conv1_im := prod_im & 
                                 std_logic_vector(to_unsigned(0, resize_param));
-
+                    
                     shiftr_in <= conv1_re;
                     state := state + 1;
                 when 7 =>                                   -- Programmable right shift imag part
@@ -156,13 +153,13 @@ end component;
 
                     state := state + 1;
                 when 8 =>                                   -- Sum res(i) and buf res(i-1) and buffering
-                    sum_re := std_logic_vector(
-                        signed(shift_re) + signed(sum_buf_re));
-                    sum_im := std_logic_vector(
-                        signed(shiftr_out) + signed(sum_buf_im));
+                    sum_re := sum_buf_re;
+                    sum_im := sum_buf_im;
 
-                    sum_buf_re := sum_re;
-                    sum_buf_im := sum_im;
+                    sum_buf_re := std_logic_vector(
+                        signed(shift_re) + signed(sum_buf_re));
+                    sum_buf_im := std_logic_vector(
+                        signed(shiftr_out) + signed(sum_buf_im));
                     
                     state := state + 1;
                 when 9 =>                                  -- Convert result of sum and conj
@@ -172,7 +169,7 @@ end component;
                     conj_re := din_re;
                     conj_im := std_logic_vector(
                         -signed(din_im));
-
+                    
                     state := state + 1;
                 when 10 =>                                  -- Start multiplication cm1
                     a <= conj_re;
