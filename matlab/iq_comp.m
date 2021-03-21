@@ -1,4 +1,3 @@
-
 pkg load signal;
 
 function y = sin_d(x, word_len)
@@ -9,7 +8,7 @@ function y = cos_d(x, word_len)
   y = fix(cos(x) * (2^(word_len-1)));
 endfunction
 
-function [dout, cm1, buf] = iq_comp(din, cm1, buf, i)
+function [dout, cm1, buf] = iq_comp(din, cm1, buf)
   dout = din - cm1;
   
   a = real(dout);
@@ -55,7 +54,7 @@ yy = out_re + j*out_im;
 
 for i = 0:(2^14-1) 
   x(i+1) = xx(i+1);
-  [y(i+1), cm1, buf] = iq_comp(x(i+1), cm1, buf, i);
+  [y(i+1), cm1, buf] = iq_comp(x(i+1), cm1, buf);
 endfor
 
 x_fft = fft(x);
