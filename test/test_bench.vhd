@@ -106,7 +106,6 @@ end component;
     signal      sin_x           :   std_logic_vector(DIG_SIZE-1 downto 0);
     signal      cos_x           :   std_logic_vector(DIG_SIZE-1 downto 0);
     signal      cos_redux       :   std_logic_vector(DIG_SIZE-1 downto 0) := (others => '0');
-    signal      cos_redux_buf   :   std_logic_vector(DIG_SIZE-1 downto 0) := (others => '0');
 
     signal      dout_re         :   std_logic_vector(DIG_SIZE-1 downto 0);
     signal      dout_im         :   std_logic_vector(DIG_SIZE-1 downto 0);
@@ -125,17 +124,15 @@ end component;
                      F_s)
         port map(strobe, reset, phase_inc, sin_x, cos_x);
 
-    -- strobe_cos <= strobe;
-    -- redux_cos: process(strobe_cos)
-    --   begin
-    --     if(strobe_cos'event and strobe = '1') then
-    --         report "redux";
-    --         cos_redux <= cos_redux_buf;
-    --         cos_redux_buf <= std_logic_vector(
-    --             signed(cos_x) / to_signed(2, WORD_LEN));
-    --         clk_iq <= clk;
-    --     end if;
-    -- end process redux_cos;
+    strobe_cos <= strobe;
+    redux_cos: process(strobe_cos)
+      begin
+        if(strobe_cos'event and strobe = '1') then
+            cos_redux <= std_logic_vector(
+                signed(cos_x) / to_signed(2, WORD_LEN));
+            clk_iq <= clk;
+        end if;
+    end process redux_cos;
     
     clk_iq <= clk;
     iq_comp0: iq_comp
