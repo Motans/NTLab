@@ -27,71 +27,76 @@ component real_mult is
   port(
     word_in1        :   in      std_logic_vector(word_len-1 downto 0);
     word_in2        :   in      std_logic_vector(word_len-1 downto 0);
-    word_out        :   out     std_logic_vector(word_len-1 downto 0)
+    word_out        :   out     std_logic_vector(word_len+1 downto 0)
   );
 end component;
 
-function sum_sat(a : std_logic_vector(word_len-1 downto 0);
-                 b : std_logic_vector(word_len-1 downto 0))
+function sum_sat(a : std_logic_vector(word_len+1 downto 0);
+                 b : std_logic_vector(word_len+1 downto 0))
     return std_logic_vector is
 
-    variable res_buf    : signed(word_len downto 0);
-    variable res        : signed(word_len-1 downto 0);
+    constant size       : natural := word_len + 2;
+    variable res_buf    : signed(size downto 0);
+    variable res        : signed(size-1 downto 0);
   BEGIN
     res     := (others => '0');
-    res_buf := resize(signed(a), word_len+1) + resize(signed(b), word_len+1);
-    if (res_buf(word_len) /= res_buf(word_len-1)) then --Saturate
-        res(word_len-1)          := res_buf(word_len);
-        res(word_len-2 downto 0) := (others => res_buf(word_len-1));
+    res_buf := resize(signed(a), size+1) + resize(signed(b), size+1);
+    if (res_buf(size) /= res_buf(size-1)) then --Saturate
+        res(size-1)          := res_buf(size);
+        res(size-2 downto 0) := (others => res_buf(size-1));
     else
-        res := res_buf(word_len-1 downto 0);
+        res := res_buf(size-1 downto 0);
     end if;
     
     return std_logic_vector(res);
 end sum_sat;
 
-function diff_sat(a : std_logic_vector(word_len-1 downto 0);
-                  b : std_logic_vector(word_len-1 downto 0))
+function diff_sat(a : std_logic_vector(word_len+1 downto 0);
+                  b : std_logic_vector(word_len+1 downto 0))
     return std_logic_vector is
 
-    variable res_buf    : signed(word_len downto 0);
-    variable res        : signed(word_len-1 downto 0);
+    constant size       : natural := word_len + 2;
+    variable res_buf    : signed(size downto 0);
+    variable res        : signed(size-1 downto 0);
   begin
     res     := (others => '0');
-    res_buf := resize(signed(a), word_len+1) - resize(signed(b), word_len+1);
-    if (res_buf(word_len) /= res_buf(word_len-1)) then --Saturate
-        res(word_len-1)          := res_buf(word_len);
-        res(word_len-2 downto 0) := (others => res_buf(word_len-1));
+    res_buf := resize(signed(a), size+1) - resize(signed(b), size+1);
+    if (res_buf(size) /= res_buf(size-1)) then --Saturate
+        res(size-1)          := res_buf(size);
+        res(size-2 downto 0) := (others => res_buf(size-1));
     else
-        res := res_buf(word_len-1 downto 0);
+        res := res_buf(size-1 downto 0);
     end if;
     
     return std_logic_vector(res);
 end diff_sat;
 
-    signal op1          : std_logic_vector(word_len-1 downto 0);        --
-    signal op2          : std_logic_vector(word_len-1 downto 0);        -- Real multiplier
-    signal prod         : std_logic_vector(word_len-1 downto 0);        --    
+    signal op1  : std_logic_vector(word_len-1 downto 0);        --
+    signal op2  : std_logic_vector(word_len-1 downto 0);        -- Real multiplier
+    signal prod : std_logic_vector(word_len+1 downto 0);        --    
   begin
     mult0 : real_mult
         generic map(word_len)
         port map(op1, op2, prod);
 
     process(clk)
-        variable state  : integer range 0 to 5;                         -- Multipliers states
+        variable state      : integer range 0 to 5;                         -- Multipliers states
 
-        variable reg_a  : std_logic_vector(word_len-1 downto 0);
-        variable reg_b  : std_logic_vector(word_len-1 downto 0);
-        variable reg_c  : std_logic_vector(word_len-1 downto 0);
-        variable reg_d  : std_logic_vector(word_len-1 downto 0);
+        variable reg_a      : std_logic_vector(word_len-1 downto 0);
+        variable reg_b      : std_logic_vector(word_len-1 downto 0);
+        variable reg_c      : std_logic_vector(word_len-1 downto 0);
+        variable reg_d      : std_logic_vector(word_len-1 downto 0);
 
-        variable res_re : std_logic_vector(word_len-1 downto 0);
-        variable res_im : std_logic_vector(word_len-1 downto 0);
+        variable res_re     : std_logic_vector(word_len-1 downto 0);
+        variable res_im     : std_logic_vector(word_len-1 downto 0);
 
-        variable ac     : std_logic_vector(word_len-1 downto 0);        -- Res of imag and real
-        variable bd     : std_logic_vector(word_len-1 downto 0);        -- part of complex digit
-        variable bc     : std_logic_vector(word_len-1 downto 0);        --
-        variable ad     : std_logic_vector(word_len-1 downto 0);        --
+        variable ac         : std_logic_vector(word_len+1 downto 0);        -- Res of imag and real
+        variable bd         : std_logic_vector(word_len+1 downto 0);        -- part of complex digit
+        variable bc         : std_logic_vector(word_len+1 downto 0);        --
+        variable ad         : std_logic_vector(word_len+1 downto 0);   
+
+        variable out_re_buf : std_logic_vector(word_len+1 downto 0);
+        variable out_im_buf : std_logic_vector(word_len+1 downto 0);
 
       begin    
         if (clk'event and clk = '1') then
@@ -125,8 +130,11 @@ end diff_sat;
                     state := state + 1;
                 when 4 =>
                     bd := prod;
-                    out_re <= diff_sat(ac, bd);
-                    out_im <= sum_sat(bc, ad);
+                    out_re_buf := diff_sat(ac, bd);
+                    out_im_buf := sum_sat(bc, ad);
+
+                    out_re <= out_re_buf(word_len+1 downto 2);
+                    out_im <= out_im_buf(word_len+1 downto 2);
                     
                     state := state + 1;
                 when others =>
