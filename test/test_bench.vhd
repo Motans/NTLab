@@ -126,7 +126,7 @@ end component;
         port map(strobe, reset, phase_inc, sin_x, cos_x);
 	
     redux_cos: process(clk_iq, reset)
-        variable buf : std_logic_vector(DIG_SIZE-1 downto 0) := (others => '0');
+        variable buf : std_logic_vector(DIG_SIZE-1 downto 0);
       begin
         if reset = '1' then
             cos_redux <= (others => '0');

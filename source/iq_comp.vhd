@@ -116,13 +116,13 @@ end diff_sat;
         port map(clk_intern, prec, shiftr_in, shiftr_out);
     
     iq0 : process(clk, reset)
-        variable state          :   integer range 0 to 15 := 0;
+        variable state          :   integer range 0 to 15;
 
         variable din_re         :   std_logic_vector(word_len-1 downto 0);
         variable din_im         :   std_logic_vector(word_len-1 downto 0);
 
-        variable cm1_re         :   std_logic_vector(word_len-1 downto 0) := (others => '0');
-        variable cm1_im         :   std_logic_vector(word_len-1 downto 0) := (others => '0');
+        variable cm1_re         :   std_logic_vector(word_len-1 downto 0);
+        variable cm1_im         :   std_logic_vector(word_len-1 downto 0);
 
         variable sub_re         :   std_logic_vector(word_len-1 downto 0);
         variable sub_im         :   std_logic_vector(word_len-1 downto 0);
@@ -131,8 +131,8 @@ end diff_sat;
         variable conv1_im       :   std_logic_vector(word_len + resize_param - 1 downto 0);
 
         variable shift_re       :   std_logic_vector(word_len + resize_param - 1 downto 0);
-        variable sum_buf_re     :   std_logic_vector(word_len + resize_param - 1 downto 0) := (others => '0');
-        variable sum_buf_im     :   std_logic_vector(word_len + resize_param - 1 downto 0) := (others => '0');
+        variable sum_buf_re     :   std_logic_vector(word_len + resize_param - 1 downto 0);
+        variable sum_buf_im     :   std_logic_vector(word_len + resize_param - 1 downto 0);
 
         variable sum_re         :   std_logic_vector(word_len + resize_param - 1 downto 0);
         variable sum_im         :   std_logic_vector(word_len + resize_param - 1 downto 0);

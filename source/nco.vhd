@@ -116,7 +116,7 @@ architecture nco_arch of nco is
     );
   begin
     sin_gen: process(clk, reset)
-        variable acc        : unsigned(acc_size-1 downto 0) := (others => '0');
+        variable acc        : unsigned(acc_size-1 downto 0);
 
         variable addr       : unsigned(quant_size-1 downto 0);
         variable real_addr  : integer range 0 to 2*TABLE_SIZE - 1;
@@ -128,7 +128,6 @@ architecture nco_arch of nco is
 
         variable sin_val    : signed(dig_size-1 downto 0);
         variable cos_val    : signed(dig_size-1 downto 0);
-        variable cos_buf    : std_logic_vector(dig_size-1 downto 0) := (others => '0');
       begin 
         if (reset = '1') then
             acc     := (others => '0');
@@ -151,7 +150,7 @@ architecture nco_arch of nco is
                 cos_sign := '0';
             else
                 real_addr := 2*TABLE_SIZE - real_addr;
-                cos_sign := '1';
+                cos_sign  := '1';
             end if;
             
             sin_addr := real_addr;
@@ -177,8 +176,8 @@ architecture nco_arch of nco is
                 cos_val := -cos_val;
             end if;
             
-            sin_out <= std_logic_vector(shift_right(sin_val,0));
-            cos_out <= std_logic_vector(shift_right(cos_val,0));
+            sin_out <= std_logic_vector(shift_right(sin_val,1));
+            cos_out <= std_logic_vector(shift_right(cos_val,1));
         end if;
     end process;
 end nco_arch;
