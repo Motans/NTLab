@@ -22,7 +22,7 @@ end comp_mult;
 architecture comp_mult_arch of comp_mult is
 component real_mult is
   generic(
-    word_len        :           natural := 18
+    word_len        :           natural
   );
   port(
     word_in1        :   in      std_logic_vector(word_len-1 downto 0);
@@ -30,6 +30,44 @@ component real_mult is
     word_out        :   out     std_logic_vector(word_len-1 downto 0)
   );
 end component;
+
+function sum_sat(a : std_logic_vector(word_len-1 downto 0);
+                 b : std_logic_vector(word_len-1 downto 0))
+    return std_logic_vector is
+
+    variable res_buf    : signed(word_len downto 0);
+    variable res        : signed(word_len-1 downto 0);
+  BEGIN
+    res     := (others => '0');
+    res_buf := resize(signed(a), word_len+1) + resize(signed(b), word_len+1);
+    if (res_buf(word_len) /= res_buf(word_len-1)) then --Saturate
+        res(word_len-1)          := res_buf(word_len);
+        res(word_len-2 downto 0) := (others => res_buf(word_len-1));
+    else
+        res := res_buf(word_len-1 downto 0);
+    end if;
+    
+    return std_logic_vector(res);
+end sum_sat;
+
+function diff_sat(a : std_logic_vector(word_len-1 downto 0);
+                  b : std_logic_vector(word_len-1 downto 0))
+    return std_logic_vector is
+
+    variable res_buf    : signed(word_len downto 0);
+    variable res        : signed(word_len-1 downto 0);
+  begin
+    res     := (others => '0');
+    res_buf := resize(signed(a), word_len+1) - resize(signed(b), word_len+1);
+    if (res_buf(word_len) /= res_buf(word_len-1)) then --Saturate
+        res(word_len-1)          := res_buf(word_len);
+        res(word_len-2 downto 0) := (others => res_buf(word_len-1));
+    else
+        res := res_buf(word_len-1 downto 0);
+    end if;
+    
+    return std_logic_vector(res);
+end diff_sat;
 
     signal op1          : std_logic_vector(word_len-1 downto 0);        --
     signal op2          : std_logic_vector(word_len-1 downto 0);        -- Real multiplier
@@ -87,11 +125,8 @@ end component;
                     state := state + 1;
                 when 4 =>
                     bd := prod;
-                    out_re <= std_logic_vector(
-                        signed(ac) - signed(bd));
-                    
-                    out_im <= std_logic_vector(
-                        signed(bc) + signed(ad));
+                    out_re <= diff_sat(ac, bd);
+                    out_im <= sum_sat(bc, ad);
                     
                     state := state + 1;
                 when others =>

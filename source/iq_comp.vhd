@@ -52,6 +52,45 @@ component shiftr is
     );
 end component;
 
+function sum_sat(a : std_logic_vector(word_len+resize_param-1 downto 0);
+                 b : std_logic_vector(word_len+resize_param-1 downto 0))
+    return std_logic_vector is
+
+    constant size       : natural := word_len + resize_param;
+    variable res_buf    : signed(size downto 0);
+    variable res        : signed(size-1 downto 0);
+  BEGIN
+    res     := (others => '0');
+    res_buf := resize(signed(a), size+1) + resize(signed(b), size+1);
+    if (res_buf(size) /= res_buf(size-1)) then --Saturate
+        res(size-1)          := res_buf(size);
+        res(size-2 downto 0) := (others => res_buf(size-1));
+    else
+        res := res_buf(size-1 downto 0);
+    end if;
+    
+    return std_logic_vector(res);
+end sum_sat;
+
+function diff_sat(a : std_logic_vector(word_len-1 downto 0);
+                  b : std_logic_vector(word_len-1 downto 0))
+    return std_logic_vector is
+
+    variable res_buf    : signed(word_len downto 0);
+    variable res        : signed(word_len-1 downto 0);
+  begin
+    res     := (others => '0');
+    res_buf := resize(signed(a), word_len+1) - resize(signed(b), word_len+1);
+    if (res_buf(word_len) /= res_buf(word_len-1)) then --Saturate
+        res(word_len-1)          := res_buf(word_len);
+        res(word_len-2 downto 0) := (others => res_buf(word_len-1));
+    else
+        res := res_buf(word_len-1 downto 0);
+    end if;
+    
+    return std_logic_vector(res);
+end diff_sat;
+
     signal a            :   std_logic_vector(word_len-1 downto 0);                      -- Signals for multiplier
     signal b            :   std_logic_vector(word_len-1 downto 0);                      -- 
     signal c            :   std_logic_vector(word_len-1 downto 0);                      -- 
@@ -77,32 +116,33 @@ end component;
         port map(clk_intern, prec, shiftr_in, shiftr_out);
     
     iq0 : process(clk, reset)
-        variable state      :   integer range 0 to 15 := 0;
+        variable state          :   integer range 0 to 15 := 0;
 
-        variable din_re     :   std_logic_vector(word_len-1 downto 0);
-        variable din_im     :   std_logic_vector(word_len-1 downto 0);
+        variable din_re         :   std_logic_vector(word_len-1 downto 0);
+        variable din_im         :   std_logic_vector(word_len-1 downto 0);
 
-        variable cm1_re     :   std_logic_vector(word_len-1 downto 0) := (others => '0');
-        variable cm1_im     :   std_logic_vector(word_len-1 downto 0) := (others => '0');
+        variable cm1_re         :   std_logic_vector(word_len-1 downto 0) := (others => '0');
+        variable cm1_im         :   std_logic_vector(word_len-1 downto 0) := (others => '0');
 
-        variable sub_re     :   std_logic_vector(word_len-1 downto 0);
-        variable sub_im     :   std_logic_vector(word_len-1 downto 0);
+        variable sub_re         :   std_logic_vector(word_len-1 downto 0);
+        variable sub_im         :   std_logic_vector(word_len-1 downto 0);
 
-        variable conv1_re   :   std_logic_vector(word_len + resize_param - 1 downto 0);
-        variable conv1_im   :   std_logic_vector(word_len + resize_param - 1 downto 0);
+        variable conv1_re       :   std_logic_vector(word_len + resize_param - 1 downto 0);
+        variable conv1_im       :   std_logic_vector(word_len + resize_param - 1 downto 0);
 
-        variable shift_re   :   std_logic_vector(word_len + resize_param - 1 downto 0);
-        variable sum_buf_re :   std_logic_vector(word_len + resize_param - 1 downto 0) := (others => '0');
-        variable sum_buf_im :   std_logic_vector(word_len + resize_param - 1 downto 0) := (others => '0');
+        variable shift_re       :   std_logic_vector(word_len + resize_param - 1 downto 0);
+        variable sum_buf_re     :   std_logic_vector(word_len + resize_param - 1 downto 0) := (others => '0');
+        variable sum_buf_im     :   std_logic_vector(word_len + resize_param - 1 downto 0) := (others => '0');
 
-        variable sum_re     :   std_logic_vector(word_len + resize_param - 1 downto 0);
-        variable sum_im     :   std_logic_vector(word_len + resize_param - 1 downto 0);
+        variable sum_re         :   std_logic_vector(word_len + resize_param - 1 downto 0);
+        variable sum_im         :   std_logic_vector(word_len + resize_param - 1 downto 0);
 
-        variable conv2_re   :   std_logic_vector(word_len-1 downto 0);
-        variable conv2_im   :   std_logic_vector(word_len-1 downto 0);
+        variable conv2_re       :   std_logic_vector(word_len-1 downto 0);
+        variable conv2_im       :   std_logic_vector(word_len-1 downto 0);
 
-        variable conj_re    :   std_logic_vector(word_len-1 downto 0);
-        variable conj_im    :   std_logic_vector(word_len-1 downto 0);
+        variable conj_re        :   std_logic_vector(word_len-1 downto 0);
+        variable conj_im        :   std_logic_vector(word_len-1 downto 0);
+        variable conj_im_buf    :   signed(word_len downto 0);
       begin
         if (reset = '1') then
             state       := 0;
@@ -119,10 +159,8 @@ end component;
 
             case state is
                 when 0 =>                                   -- Sub results of cm1 and din1
-                    sub_re := std_logic_vector(
-                        signed(din_re) - signed(cm1_re));
-                    sub_im := std_logic_vector(
-                        signed(din_im) - signed(cm1_im));
+                    sub_re := diff_sat(din_re, cm1_re);
+                    sub_im := diff_sat(din_im, cm1_im);
 
                     dout_re <= sub_re;
                     dout_im <= sub_im;
@@ -156,10 +194,8 @@ end component;
                     sum_re := sum_buf_re;
                     sum_im := sum_buf_im;
 
-                    sum_buf_re := std_logic_vector(
-                        signed(shift_re) + signed(sum_buf_re));
-                    sum_buf_im := std_logic_vector(
-                        signed(shiftr_out) + signed(sum_buf_im));
+                    sum_buf_re := sum_sat(shift_re, sum_buf_re);
+                    sum_buf_im := sum_sat(shiftr_out, sum_buf_im);
                     
                     state := state + 1;
                 when 9 =>                                  -- Convert result of sum and conj
@@ -167,8 +203,16 @@ end component;
                     conv2_im := sum_im(word_len + resize_param - 1 downto resize_param);
 
                     conj_re := din_re;
-                    conj_im := std_logic_vector(
-                        -signed(din_im));
+
+                    conj_im := (others => '0');
+                    conj_im_buf := -resize(signed(din_im), word_len+1);
+                    if (conj_im_buf(word_len) /= conj_im_buf(word_len-1)) then --Saturate
+                        conj_im(word_len-1)          := conj_im_buf(word_len);
+                        conj_im(word_len-2 downto 0) := (others => conj_im_buf(word_len-1));
+                    else
+                        conj_im := std_logic_vector(
+                            conj_im_buf(word_len-1 downto 0));
+                    end if;
                     
                     state := state + 1;
                 when 10 =>                                  -- Start multiplication cm1

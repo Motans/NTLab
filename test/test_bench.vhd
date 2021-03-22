@@ -115,7 +115,7 @@ end component;
     strobe_event(strobe, FREQ/16.0, 0.5 sec / FREQ, N);
     phase_inc <= std_logic_vector(
         to_unsigned(512, ACC_SIZE));
-    prec <= (others => '0');
+    prec <= std_logic_vector(to_unsigned(2, PREC_LEN));
 
     nco0: nco
         generic map( DIG_SIZE,
@@ -123,29 +123,28 @@ end component;
                      QUANT_SIZE,
                      F_s)
         port map(strobe, reset, phase_inc, sin_x, cos_x);
-
-    strobe_cos <= strobe;
-    redux_cos: process(strobe_cos)
+	
+    redux_cos: process(clk_iq, reset)
       begin
-        if(strobe_cos'event and strobe = '1') then
-            cos_redux <= std_logic_vector(
-                signed(cos_x) / to_signed(2, WORD_LEN));
-            clk_iq <= clk;
-        end if;
-    end process redux_cos;
+	    if reset = '1' then
+		      cos_redux <= (others => '0');
+      elsif(clk_iq'event and clk_iq = '1') then
+          cos_redux <= std_logic_vector(shift_right(signed(cos_x),1));
+      end if;
+    end process redux_cos;	
     
     clk_iq <= clk;
     iq_comp0: iq_comp
         generic map( WORD_LEN,
                      PREC_LEN,
                      RESIZE_PARAM)
-        port map(clk_iq, reset, strobe, prec, cos_x, sin_x, dout_re, dout_im);
+        port map(clk_iq, reset, strobe, prec, cos_redux, sin_x, dout_re, dout_im);
 
     RC: process(strobe)
         variable l : line;
       begin
         if(strobe'event and strobe = '0') then
-            write(l,to_integer(signed(cos_x)));
+            write(l,to_integer(signed(cos_redux)));
             writeline(outfile0,l);
 
             write(l,to_integer(signed(sin_x)));

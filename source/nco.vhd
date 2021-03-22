@@ -177,9 +177,8 @@ architecture nco_arch of nco is
                 cos_val := -cos_val;
             end if;
             
-            sin_out <= std_logic_vector(sin_val);
-            cos_out <= cos_buf;
-            cos_buf := std_logic_vector(cos_val / to_signed(2, dig_size));
+            sin_out <= std_logic_vector(shift_right(sin_val,0));
+            cos_out <= std_logic_vector(shift_right(cos_val,0));
         end if;
     end process;
 end nco_arch;
