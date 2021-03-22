@@ -79,7 +79,7 @@ end diff_sat;
         generic map(word_len)
         port map(op1, op2, prod);
 
-    process(clk)
+    g: process(clk)
         variable state      : integer range 0 to 5;                         -- Multipliers states
 
         variable reg_a      : std_logic_vector(word_len-1 downto 0);

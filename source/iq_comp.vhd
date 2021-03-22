@@ -150,6 +150,8 @@ end diff_sat;
             cm1_im      := (others => '0');
             sum_buf_re  := (others => '0');
             sum_buf_im  := (others => '0');
+            sub_re      := (others => '0');
+            sub_im      := (others => '0');
             dout_re     <= (others => '0');
             dout_im     <= (others => '0');
         elsif (clk'event and clk = '1') then
@@ -161,9 +163,6 @@ end diff_sat;
 
             case state is
                 when 0 =>                                   -- Sub results of cm1 and din1
-                    sub_re := diff_sat(din_re, cm1_re);
-                    sub_im := diff_sat(din_im, cm1_im);
-
                     dout_re <= sub_re;
                     dout_im <= sub_im;
 
@@ -231,6 +230,9 @@ end diff_sat;
                 when 15 =>
                     cm1_re := prod_re;
                     cm1_im := prod_im;
+
+                    sub_re := diff_sat(din_re, cm1_re);
+                    sub_im := diff_sat(din_im, cm1_im);
             end case;
         end if;
     end process;
