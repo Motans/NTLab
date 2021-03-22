@@ -99,13 +99,13 @@ end component;
     signal      strobe_cos      :   std_logic;
     signal      clk_iq          :   std_logic;
     signal      strobe          :   std_logic;
-    signal      reset           :   std_logic := '0';
+    signal      reset           :   std_logic;
 
     signal      prec            :   std_logic_vector(PREC_LEN-1 downto 0);
     signal      phase_inc       :   std_logic_vector(ACC_SIZE-1 downto 0);
     signal      sin_x           :   std_logic_vector(DIG_SIZE-1 downto 0);
     signal      cos_x           :   std_logic_vector(DIG_SIZE-1 downto 0);
-    signal      cos_redux       :   std_logic_vector(DIG_SIZE-1 downto 0) := (others => '0');
+    signal      cos_redux       :   std_logic_vector(DIG_SIZE-1 downto 0);
 
     signal      dout_re         :   std_logic_vector(DIG_SIZE-1 downto 0);
     signal      dout_im         :   std_logic_vector(DIG_SIZE-1 downto 0);
@@ -113,6 +113,7 @@ end component;
   begin
     clk_event(clk, FREQ, 16*N);
     strobe_event(strobe, FREQ/16.0, 0.5 sec / FREQ, N);
+    reset <= '1', '0' after 16 ms;
     phase_inc <= std_logic_vector(
         to_unsigned(512, ACC_SIZE));
     prec <= std_logic_vector(to_unsigned(2, PREC_LEN));
@@ -125,13 +126,18 @@ end component;
         port map(strobe, reset, phase_inc, sin_x, cos_x);
 	
     redux_cos: process(clk_iq, reset)
+        variable buf : std_logic_vector(DIG_SIZE-1 downto 0) := (others => '0');
       begin
-	    if reset = '1' then
-		      cos_redux <= (others => '0');
-      elsif(clk_iq'event and clk_iq = '1') then
-          cos_redux <= std_logic_vector(shift_right(signed(cos_x),1));
-      end if;
-    end process redux_cos;	
+        if reset = '1' then
+            cos_redux <= (others => '0');
+            buf := (others => '0');
+        elsif(clk_iq'event and clk_iq = '1') then
+            if strobe = '1' then
+                cos_redux <= std_logic_vector(shift_right(signed(buf),1));
+                buf := cos_x;
+            end if;
+        end if;
+      end process redux_cos;	
     
     clk_iq <= clk;
     iq_comp0: iq_comp

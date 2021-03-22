@@ -150,6 +150,8 @@ end diff_sat;
             cm1_im      := (others => '0');
             sum_buf_re  := (others => '0');
             sum_buf_im  := (others => '0');
+            dout_re     <= (others => '0');
+            dout_im     <= (others => '0');
         elsif (clk'event and clk = '1') then
             if (dstrb = '1') then
                 state := 0;
