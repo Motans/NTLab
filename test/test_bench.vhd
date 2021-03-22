@@ -93,7 +93,7 @@ end component;
     constant    F_s             :   integer := 44100;
 
     constant    FREQ            :   real    := 1000.0;
-    constant    N               :   natural := 2**14;
+    constant    N               :   natural := 2**17;
     
     signal      clk             :   std_logic;
     signal      strobe_cos      :   std_logic;
