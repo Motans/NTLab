@@ -146,21 +146,23 @@ end component;
                      RESIZE_PARAM)
         port map(clk_iq, reset, strobe, prec, cos_redux, sin_x, dout_re, dout_im);
 
-    RC: process(strobe)
+    RC: process(clk_iq)
         variable l : line;
       begin
-        if(strobe'event and strobe = '0') then
-            write(l,to_integer(signed(cos_redux)));
-            writeline(outfile0,l);
+        if (clk_iq'event and clk_iq = '1') then
+            if (strobe = '1') then 
+                write(l,to_integer(signed(cos_redux)));
+                writeline(outfile0,l);
 
-            write(l,to_integer(signed(sin_x)));
-            writeline(outfile1,l);
+                write(l,to_integer(signed(sin_x)));
+                writeline(outfile1,l);
 
-            write(l,to_integer(signed(dout_re)));
-            writeline(outfile2, l);
+                write(l,to_integer(signed(dout_re)));
+                writeline(outfile2, l);
 
-            write(l,to_integer(signed(dout_im)));
-            writeline(outfile3,l);
+                write(l,to_integer(signed(dout_im)));
+                writeline(outfile3,l);
+            end if;
         end if;
     end process RC;
 end test_bench_arch;
